@@ -5,7 +5,8 @@ import sqlite3
 from User import User
 # Third-party libraries
 from flask import Flask, redirect, request, url_for
-
+from datetime import datetime
+from db_ops import DB_Ops
 from flask_login import (
     LoginManager,
     current_user,
@@ -47,7 +48,11 @@ def get_google_provider_cfg():
 @app.route("/")
 def index():
     if current_user.is_authenticated:
-        return f"Hello, {current_user.name}!"
+        return f'''
+        <h1>Hello, {current_user.name}!<h1>
+        <img src="{current_user.profile_pic}"><br>
+        <a class='button' href='/logout'>Logout</a>
+        '''
     else:
         return "<a class='button' href='/login'>Google Login</a>"
 
@@ -107,9 +112,30 @@ def logout():
     logout_user()
     return redirect(url_for("index"))
 
+#this should have body with id, the copied data too and maybe also the dtype of the copied stuff
+@app.route("/saveclip", methods=["POST"])
+def save():
+    # try:
+        print("hi")
+        req_data = request.get_json()
+        print(req_data)
+        #save data first
+        userId, data, timestamp, dtype = req_data["id"], req_data["data"], datetime.now(), req_data["data_type"]
+        DB_Ops.save_clip(userId, timestamp, data, dtype)
+        return {"Success":"saved thing"}, 200
+    # except:
+    #     return {"Error":"something went wrong"}, 400
+
+
+    
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.get(user_id)
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+
+#TODO: for now, just send a post request to the clipboard updation endpoint from postman or something
+#then try pasting in browser, see if this works to kinda simulate multiple devices
