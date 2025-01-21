@@ -1,0 +1,23 @@
+{
+    "name": "Hello Extensions",
+    "description": "Base Level Extension",
+    "version": "1.0",
+    "manifest_version": 3,
+    "action": {
+      "default_popup": "frontpage.html",
+      "default_icon": "clip.webp"
+    },
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js":["content_scripts.js"]
+        }
+    ],
+    "permissions": [
+        "activeTab",
+        "clipboardRead"
+    ],
+    "background":{
+        "service_worker":"background.js"
+    }
+  }
