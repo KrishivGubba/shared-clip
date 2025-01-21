@@ -1,3 +1,58 @@
+//establish websocket connection and listen for data
+const socket = new WebSocket('ws://localhost:8765');
+
+//upon conn
+socket.onopen = function(event) {
+    const message = {
+        "id":123,
+        "data":"hell1",
+        "data_type":"text"
+    }
+    socket.send(JSON.stringify(message));
+    console.log("estd conn to wbsckt");
+}
+
+socket.onmessage = function(event){
+    console.log("we received a message fromt the bakcend")
+    console.log(event.data);
+    //func to send wbsckt rcv data to cscript
+    function sendData(text){
+        try {
+            console.log("Sending data to content script:", text);
+            // chrome.runtime.sendMessage({
+            //     purpose: "incoming clip data",
+            //     data: text
+            // }, (response) => {
+            //     console.log("Response from content script:", response);
+            // });
+
+            setTimeout(() => {
+                chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                    if (tabs.length > 0) {
+                        chrome.tabs.sendMessage(tabs[0].id, { purpose: 'incoming clip data', data: text }, (response) => {
+                            if (response && response.success) {
+                                console.log(response.message); // Success feedback
+                            } else {
+                                console.error(response ? response.message : 'No response from content script.');
+                            }
+                        });
+                    }
+                });
+                // Your code here
+            }, 5000);
+        } catch (error) {
+            console.error("Error sending data to content script:", error);
+        }
+    }
+    sendData(event.data);
+}
+
+socket.onclose = function (event) {
+    // Log a message when disconn
+    console.log('Disconnected from WebSocket server');
+};
+
+
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
         if (request.greeting === "clipboardData") {
@@ -6,6 +61,8 @@ chrome.runtime.onMessage.addListener(
             try {
                 const copyText = request.copyText;
                 sendResponse({success:"copied data successfully",data:copyText});
+                //TODO: we got the text, now send it through websocket to backend
+
             } catch{
                 sendResponse({error:"was not able to access clipboard data"});
             }

@@ -22,4 +22,25 @@ function handleCopy(event){
 }
 
 document.addEventListener("keydown", handleCopy)
+
+
+chrome.runtime.onMessage.addListener(
+    function(request, sender, sendResponse) {
+        console.log("ccsc")
+        if (request.purpose === "incoming clip data") {
+            try {
+                const copyText = request.data;
+                navigator.clipboard.writeText(copyText).then(() => {
+                    sendResponse({success:"added data to clipboard successfully",data:copyText});
+                  }).catch((err) => {
+                    console.error('Failed to copy text to clipboard: ', err);
+                  });
+            } catch{
+                sendResponse({error:"was not able to write to keyboard"});
+            }
+        }
+        return true;
+    }
+);
+
 console.log("bello")
