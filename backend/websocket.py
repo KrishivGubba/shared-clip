@@ -2,41 +2,45 @@ import asyncio
 from websockets.asyncio.server import serve
 import json
 from collections import defaultdict
+from websockets.exceptions import ConnectionClosedError  # Import the specific exception
 
 users = defaultdict(set)
 
+async def register(websocket, id):
+    try:
+        users[id].add(websocket)
+        await websocket.send("Successful registration")
+        return True
+    except Exception as e:
+        print(f"Error occurred during registration: {str(e)}")
+        await websocket.send("Retry registration")
+        return False
 
-def savetoclipboard(text):
-    pass
+async def unregister(websocket, id):
+    users[id].remove(websocket)
+    if not users[id]: del users[id]
 
-
-#TODO: 6there will have to be some kind of a registration ssytem in the beginning where each device will have to ping the
-#webscoket and get connected so that we can addd them to the set
 async def echo(websocket):
-    # users.add(websocket)
-    # print(websocket)
     async for message in websocket:
         payload = json.loads(message)
         if "id" not in payload or "data" not in payload or "data_type"  not in payload:
             await websocket.send("Faulty message, missing keys")
-        # for user in users:
-        #     await user.send(message)
         else:
-            users[payload["id"]].add(websocket)
-            print(payload["data"])
-            print(users[payload["id"]])
-            print(websocket)
+            if websocket not in users[payload["id"]]:
+                res = await register(websocket, payload["id"])
+                if not res: continue #reg failed
             for user in users[payload["id"]]:
-                print(user)
                 if user!=websocket:
                     try:
                         await user.send(payload["data"])
-                    except:
-                        print("Error in connecting to client, REMOVED.")
-                        #remove faulty connection
-                        # users[payload["id"]].remove(user)
-            # await websocket.send("we got your message")
-
+                    except (asyncio.exceptions.CancelledError, 
+                            asyncio.exceptions.InvalidStateError, 
+                            ConnectionResetError, 
+                            ConnectionClosedError):
+                        await unregister(user, payload["id"]) #client disconnected
+                    except Exception as e:
+                        print("Some error: \n" + str(e))
+                        await websocket.send("Some error occurred")
 
 async def main():
     async with serve(echo, "localhost", 8765) as server:
