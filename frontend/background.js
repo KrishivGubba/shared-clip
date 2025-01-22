@@ -52,6 +52,14 @@ socket.onclose = function (event) {
     console.log('Disconnected from WebSocket server');
 };
 
+function sendToSocket(text, type){
+    body = {
+        "id":123, //we need to get the actual id eventually
+        "data":text,
+        "data_type":type
+    }
+    socket.send(JSON.stringify(body));
+}
 
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
@@ -62,7 +70,7 @@ chrome.runtime.onMessage.addListener(
                 const copyText = request.copyText;
                 sendResponse({success:"copied data successfully",data:copyText});
                 //TODO: we got the text, now send it through websocket to backend
-
+                sendToSocket(copyText, "text") //for now the type is just text
             } catch{
                 sendResponse({error:"was not able to access clipboard data"});
             }
