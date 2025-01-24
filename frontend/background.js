@@ -3,6 +3,13 @@ const socket = new WebSocket('ws://localhost:8765');
 
 //upon conn
 socket.onopen = function(event) {
+    //make this some kind of test message
+    const message = {
+        "id":123,
+        "data":"hell1",
+        "data_type":"text"
+    }
+    socket.send(JSON.stringify(message));
     console.log("estd conn to wbsckt");
 }
 

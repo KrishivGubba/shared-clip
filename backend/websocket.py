@@ -29,18 +29,20 @@ async def echo(websocket):
             if websocket not in users[payload["id"]]:
                 res = await register(websocket, payload["id"])
                 if not res: continue #reg failed
+            mark = []
             for user in users[payload["id"]]:
                 if user!=websocket:
                     try:
+                        print("sent some data")
                         await user.send(payload["data"])
-                    except (asyncio.exceptions.CancelledError, 
-                            asyncio.exceptions.InvalidStateError, 
-                            ConnectionResetError, 
-                            ConnectionClosedError):
-                        await unregister(user, payload["id"]) #client disconnected
                     except Exception as e:
-                        print("Some error: \n" + str(e))
-                        await websocket.send("Some error occurred")
+                        # await unregister(user, payload["id"])
+                        # users[payload["id"]].remove(user)
+                        mark.append(user)
+                        await websocket.send("We have unregistered the client.")
+            #cleanup
+            for thing in mark:
+                users[payload["id"]].remove(thing)
 
 async def main():
     async with serve(echo, "localhost", 8765) as server:

@@ -16,9 +16,17 @@
     "permissions": [
         "activeTab",
         "clipboardRead",
-        "clipboardWrite"
+        "clipboardWrite",
+        "scripting",
+        "storage"
     ],
     "background":{
         "service_worker":"background.js"
-    }
+    },
+    "web_accessible_resources": [
+        {
+            "resources": ["join_network.html", "new_network.html"],
+            "matches": ["<all_urls>"]
+        }
+    ]
   }
