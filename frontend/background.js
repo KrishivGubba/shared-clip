@@ -1,8 +1,9 @@
 //establish websocket connection and listen for data
-const socket = new WebSocket('ws://localhost:8765');
+const socket = new WebSocket('ws://192.168.251.1:8765');
 
 //upon conn
 socket.onopen = function(event) {
+    
     //make this some kind of test message
     const message = {
         "id":123,
@@ -34,6 +35,7 @@ socket.onmessage = function(event){
                             if (response && response.success) {
                                 console.log(response.message); // Success feedback
                             } else {
+                                console.log(response);
                                 console.error(response ? response.message : 'No response from content script.');
                             }
                         });
@@ -54,12 +56,24 @@ socket.onclose = function (event) {
 };
 
 function sendToSocket(text, type){
-    body = {
-        "id":123, //we need to get the actual id eventually
-        "data":text,
-        "data_type":type
-    }
-    socket.send(JSON.stringify(body));
+    chrome.storage.local.get(["networkKey"], function(result) {
+        console.log("this is the result")
+        console.log(result)
+        if (result.networkKey !== undefined) {
+            // The key exists
+            console.log("Key value:", result.networkKey);
+            body = {
+                "id":result.networkKey, //we need to get the actual id eventually
+                "data":text,
+                "data_type":type
+            }
+            socket.send(JSON.stringify(body));        
+        } else {
+            // The key does not exist
+            console.log("Key does not exist in storage.");
+        }
+    });
+    
 }
 
 chrome.runtime.onMessage.addListener(
@@ -75,6 +89,34 @@ chrome.runtime.onMessage.addListener(
             } catch{
                 sendResponse({error:"was not able to access clipboard data"});
             }
+        } else if (request.purpose==="new-key"){
+            // const key = request.key;
+            //save key in cookie
+            //TODO: put the id in .env
+            console.log("we are here in bg")
+            try{
+                chrome.storage.local.set({ networkKey: request.key }, function() {
+                    console.log("Key saved successfully");    
+                    chrome.storage.local.get(["networkKey"], function(result) {
+                        console.log("Retrieved key:", result.networkKey);
+                        sendResponse({success: result.networkKey}); // Send the key back as the response
+                    });
+                });  
+            }catch (e){
+                console.log(e);
+                sendResponse({error:"something went wrong while setting cookies"});
+                console.log("badbadbad")
+            }
+            //send key to backend?? no.
         }
     }
 );
+
+
+//popup.js stuff
+
+// chrome.runtime.onMessage.addListener(
+//     function(request, sender, sendResponse) {
+//         if (request.purpose)
+//     }
+// )

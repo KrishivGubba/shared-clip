@@ -18,7 +18,9 @@
         "clipboardRead",
         "clipboardWrite",
         "scripting",
-        "storage"
+        "storage",
+        "cookies",
+        "tabs"
     ],
     "background":{
         "service_worker":"background.js"

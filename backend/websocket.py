@@ -45,7 +45,7 @@ async def echo(websocket):
                 users[payload["id"]].remove(thing)
 
 async def main():
-    async with serve(echo, "localhost", 8765) as server:
+    async with serve(echo, "0.0.0.0", 8765) as server:
         print("starting wbsckt server now")
         await server.serve_forever()
 
