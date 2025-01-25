@@ -1,27 +1,22 @@
-function handleCopy(event){
-    if (event.ctrlKey && event.key==="c"){
-        // Direct clipboard access in content script
-        navigator.clipboard.readText()
-        .then((text) => {
-            chrome.runtime.sendMessage({greeting:"clipboardData",copyText: text}, (response) => {
-                if (response.success){
-                    console.log("received confirmation");
+// Listen for the "copy" event (this captures all copy actions, including Ctrl + C)
+document.addEventListener("copy", (event) => {
+    console.log("copy event detected");
+    const copiedText = window.getSelection().toString();
+    if (copiedText){
+        chrome.runtime.sendMessage(
+            {greeting: "clipboardData", copyText: copiedText},
+            (response) => {
+                if (response.success) {
+                    console.log("Received confirmation");
                     console.log(response.data);
-                }else{
+                } else {
                     console.log(response.error);
                 }
-            })
-        })
-        .catch((error) => console.error("Clipboard access error:", error));
-
-        //NEED TO SEND A MESSAGE HERE
-        // chrome.runtime.sendMessage({greeting:"clipboardData"}, (response) => {
-        //     console.log("got somethingb ack i sup")
-        // })
+            }
+        )
     }
-}
+});
 
-document.addEventListener("keydown", handleCopy)
 
 
 chrome.runtime.onMessage.addListener(
