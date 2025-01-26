@@ -16,6 +16,8 @@ from flask_login import (
 )
 from oauthlib.oauth2 import WebApplicationClient
 import requests
+import websockets
+import asyncio
 
 # Internal imports
 # from db import init_db_command
@@ -36,7 +38,7 @@ app.secret_key = os.getenv("APP_SECRET")
 login_manager = LoginManager()
 login_manager.init_app(app)
 
-os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1' #dont remove this
 
 client = WebApplicationClient(GOOGLE_CLIENT_ID)
 
@@ -123,8 +125,7 @@ def save():
         userId, data, timestamp, dtype = req_data["id"], req_data["data"], datetime.now(), req_data["data_type"]
         DB_Ops.save_clip(userId, timestamp, data, dtype)
         return {"Success":"saved thing"}, 200
-    # except:
-    #     return {"Error":"something went wrong"}, 400
+
 
 
     
@@ -134,7 +135,7 @@ def load_user(user_id):
     return User.get(user_id)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=1111)
 
 
 #TODO: for now, just send a post request to the clipboard updation endpoint from postman or something

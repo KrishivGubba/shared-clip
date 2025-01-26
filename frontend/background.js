@@ -1,6 +1,5 @@
 //establish websocket connection and listen for data
 const socket = new WebSocket('ws://192.168.142.1:8765');
-
 //upon conn
 socket.onopen = function(event) {
     
@@ -73,19 +72,64 @@ function sendToSocket(text, type){
             console.log("Key does not exist in storage.");
         }
     });
-    
 }
+
+
+
+function getNetworkKey() {
+    return new Promise((resolve, reject) => {
+        chrome.storage.local.get(["networkKey"], function (result) {
+            if (chrome.runtime.lastError) {
+                reject(chrome.runtime.lastError);
+            } else if (result.networkKey !== undefined) {
+                resolve(result.networkKey);
+            } else {
+                reject(new Error("networkKey not found in local storage"));
+            }
+        });
+    });
+}
+
+async function saveClip(copyText, url, dtype){
+    try{
+        const key = await getNetworkKey();
+        // const apiUrl = 'http://192.168.142.1:1111/saveclip';
+        const data = {
+        "id": key,
+        "data": copyText,
+        "data_type": "text"
+        };
+
+        const requestOptions = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+        }
+        const response = await fetch(url, requestOptions);
+        if (!response.ok) {
+            throw new Error("Response not okay! Status: " + response.status);
+        }
+        const responseData = await response.json();
+        console.log("Response Data:", responseData);
+    }catch (error){
+        console.log("Some error while saving clip data", error);
+    }
+}
+    
+
 
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
-        if (request.greeting === "clipboardData") {
-            // console.log("background got something");
-            // sendResponse({ response: "hihibro" });
+        if (request.greeting === "clipboardData") { //TODO: make api call to save data
             try {
+                console.log("we are on the right place")
                 const copyText = request.copyText;
                 sendResponse({success:"copied data successfully",data:copyText});
-                //TODO: we got the text, now send it through websocket to backend
                 sendToSocket(copyText, "text") //for now the type is just text
+                //api call to svae
+                saveClip(copyText, 'http://192.168.142.1:1111/saveclip', "text"); //just text for now
             } catch{
                 sendResponse({error:"was not able to access clipboard data"});
             }
