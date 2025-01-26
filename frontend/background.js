@@ -89,9 +89,15 @@ chrome.runtime.onMessage.addListener(
             } catch{
                 sendResponse({error:"was not able to access clipboard data"});
             }
-        } else if (request.purpose==="new-key"){
-            // const key = request.key;
-            //save key in cookie
+        } else if (request.purpose==="new-key" || request.purpose=="join-net"){
+            //TODO: check validity in case of join-net: 
+            // if (request.purpose==="join-net"){
+            //     body = {
+            //         "checkValid":request.key
+            //     }
+            //     socket.send(JSON.stringify(body))
+            //     //if not pass do not execute the rest this code block
+            // }
             //TODO: put the id in .env
             console.log("we are here in bg")
             try{
