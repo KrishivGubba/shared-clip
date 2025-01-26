@@ -1,5 +1,5 @@
 //establish websocket connection and listen for data
-const socket = new WebSocket('ws://192.168.251.1:8765');
+const socket = new WebSocket('ws://192.168.142.1:8765');
 
 //upon conn
 socket.onopen = function(event) {
@@ -95,13 +95,30 @@ chrome.runtime.onMessage.addListener(
             //TODO: put the id in .env
             console.log("we are here in bg")
             try{
+                //check key existence
+                chrome.storage.local.get(["networkKey"], function(res) {
+                    if (res.networkKey){
+                        //unregister existing key conn
+                        console.log("trying to unreg client first")
+                        body = {
+                            "oldKey" : res.networkKey
+                        }
+                        socket.send(JSON.stringify(body))
+                    } else{
+                        console.log("no networkKey found in storage")
+                    }
+                })
+                //set new key
                 chrome.storage.local.set({ networkKey: request.key }, function() {
                     console.log("Key saved successfully");    
                     chrome.storage.local.get(["networkKey"], function(result) {
                         console.log("Retrieved key:", result.networkKey);
-                        sendResponse({success: result.networkKey}); // Send the key back as the response
+                        sendResponse(result.networkKey); // Send the key back as the response
                     });
                 });  
+                //register now
+                sendToSocket("New device registered", request.key);
+                return true;
             }catch (e){
                 console.log(e);
                 sendResponse({error:"something went wrong while setting cookies"});

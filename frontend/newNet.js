@@ -19,6 +19,9 @@ document.getElementById("newKeyButton").onclick = (e) => {
     chrome.runtime.sendMessage({        
         purpose: "new-key",
         key: newKey
-    }, (response) => console.log(response)) 
+    }, (response) => {
+        // console.log(response, "this is the  key in netj.s")
+        document.getElementById("show-key").value = response;
+    }) 
 }
   

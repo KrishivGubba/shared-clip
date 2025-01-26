@@ -23,7 +23,17 @@ async def unregister(websocket, id):
 async def echo(websocket):
     async for message in websocket:
         payload = json.loads(message)
-        if "id" not in payload or "data" not in payload or "data_type"  not in payload:
+        if "oldKey" in payload:
+            try:
+                print(payload)
+                print(users[payload["oldKey"]])
+                users[payload["oldKey"]].remove(websocket)
+                await websocket.send("Client removed")
+            except Exception as e:
+                print("Some error ocurred")
+                print(e)
+                await websocket.send(f"Err in client removals")
+        elif "id" not in payload or "data" not in payload or "data_type"  not in payload:
             await websocket.send("Faulty message, missing keys")
         else:
             if websocket not in users[payload["id"]]:
