@@ -117,6 +117,36 @@ async function saveClip(copyText, url, dtype){
         console.log("Some error while saving clip data", error);
     }
 }
+
+async function getAllClips(){
+    try{
+        const thing = await getNetworkKey();
+        const params = new URLSearchParams({
+            key : thing
+        });
+        const url = "http://192.168.142.1:1111/fetchclip"
+        const urlWithParams = `${url}?${params.toString()}`;
+        
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        };
+        
+        const response = await fetch(urlWithParams, requestOptions);
+        
+        if (!response.ok) {
+            throw new Error("Response not okay! Status: " + response.status);
+        }
+        
+        const responseData = await response.json();       
+        return responseData; 
+
+    }catch (e){
+        console.log("this is the error while fetching cb", e);
+    }
+}
     
 
 
@@ -175,6 +205,18 @@ chrome.runtime.onMessage.addListener(
                 console.log("badbadbad")
             }
             //send key to backend?? no.
+        }else if (request.purpose === "req-key"){
+            (async () => {
+                try {
+                    const allClips = await getAllClips(); // Wait for the function to resolve
+                    console.log("These are all the clips I got:", allClips);
+                    sendResponse({ clips: allClips });
+                } catch (error) {
+                    console.error("Error fetching clips:", error);
+                    sendResponse({ error: "Failed to fetch clips" });
+                }
+            })();
+            return true; //
         }
     }
 );

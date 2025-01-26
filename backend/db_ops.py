@@ -30,4 +30,19 @@ class DB_Ops:
             "data_type": dtype
         }
         thisCollection.insert_one(toSave)
-    
+
+    @staticmethod
+    def get_clips(key):
+        #lookup within coll
+        thisCollection = mydb["clip-data"]
+        output = list(thisCollection.find({
+                    "userId":key
+                }))
+        for clip in output:
+            clip["_id"] = str(clip["_id"])
+        return output
+
+    # @staticmethod
+    # def 
+
+# print(DB_Ops.get_clips("mToEQD1DU1"))

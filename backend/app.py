@@ -4,7 +4,7 @@ import os
 import sqlite3
 from User import User
 # Third-party libraries
-from flask import Flask, redirect, request, url_for
+from flask import Flask, redirect, request, url_for, jsonify
 from datetime import datetime
 from db_ops import DB_Ops
 from flask_login import (
@@ -125,6 +125,20 @@ def save():
         userId, data, timestamp, dtype = req_data["id"], req_data["data"], datetime.now(), req_data["data_type"]
         DB_Ops.save_clip(userId, timestamp, data, dtype)
         return {"Success":"saved thing"}, 200
+
+@app.route("/fetchclip", methods=["GET"])
+def get():
+    try:
+        key = request.args.get('key')
+        result = DB_Ops.get_clips(key)
+        body = {
+            "success":"found results",
+            "data":result
+        }
+        return jsonify(body)
+    except Exception as e:
+        return jsonify({"error??":str(e)})
+        
 
 
 

@@ -5,3 +5,7 @@ document.getElementById('new-net').onclick = (e) => {
 document.getElementById('join-net').onclick = (e) => {
     window.location.href = "./join_network.html"
 }
+
+document.getElementById('see-hist').onclick = (e) => {
+    window.location.href = "./seeHist.html"
+}
