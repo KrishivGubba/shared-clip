@@ -1,3 +1,5 @@
+// import MouseTrap from 'mousetrap';
+
 //establish websocket connection and listen for data
 const socket = new WebSocket('ws://192.168.142.1:8765');
 //upon conn

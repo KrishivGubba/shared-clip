@@ -1,4 +1,5 @@
-// Listen for the "copy" event (this captures all copy actions, including Ctrl + C)
+// import MouseTrap from 'mousetrap';
+
 document.addEventListener("copy", (event) => {
     console.log("copy event detected");
     const copiedText = window.getSelection().toString();
@@ -37,5 +38,34 @@ chrome.runtime.onMessage.addListener(
         return true;
     }
 );
+
+//add event listener
+
+// MouseTrap.bind("ctrl+q", function(e) {
+//     e.preventDefault();
+//     console.log("hello there q")
+    // tell bg to give latest
+
+// })
+
+// content_scripts.js
+document.addEventListener("keydown", function(event) {
+    if (event.ctrlKey && event.key.toLowerCase() === "q") {
+        console.log("heeee")
+        chrome.runtime.sendMessage(
+            {purpose: "req-key"},
+                (response) => {
+                    if (response.clips) {
+                        const toBeCopied = response.clips.data[response.clips.data.length-1].data
+                        navigator.clipboard.writeText(toBeCopied);
+                        console.log(toBeCopied)
+                    } else {
+                        console.log("received no clips");
+                    }
+                }
+        )
+    }
+});
+
 
 console.log("bello")
