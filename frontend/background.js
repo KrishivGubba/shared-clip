@@ -5,14 +5,14 @@ const socket = new WebSocket('ws://192.168.55.1:8765');
 //upon conn
 socket.onopen = function(event) {
     
-    //make this some kind of test message
-    const message = {
-        "id":123,
-        "data":"hell1",
-        "data_type":"text"
-    }
-    socket.send(JSON.stringify(message));
-    console.log("estd conn to wbsckt");
+    // //make this some kind of test message
+    // const message = {
+    //     "id":123,
+    //     "data":"hell1",
+    //     "data_type":"text"
+    // }
+    // socket.send(JSON.stringify(message));
+    // console.log("estd conn to wbsckt");
 }
 
 socket.onmessage = function(event){
@@ -22,12 +22,6 @@ socket.onmessage = function(event){
     function sendData(text){
         try {
             console.log("Sending data to content script:", text);
-            // chrome.runtime.sendMessage({
-            //     purpose: "incoming clip data",
-            //     data: text
-            // }, (response) => {
-            //     console.log("Response from content script:", response);
-            // });
 
             setTimeout(() => {
                 chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -166,15 +160,6 @@ chrome.runtime.onMessage.addListener(
                 sendResponse({error:"was not able to access clipboard data"});
             }
         } else if (request.purpose==="new-key" || request.purpose=="join-net"){
-            //TODO: check validity in case of join-net: 
-            // if (request.purpose==="join-net"){
-            //     body = {
-            //         "checkValid":request.key
-            //     }
-            //     socket.send(JSON.stringify(body))
-            //     //if not pass do not execute the rest this code block
-            // }
-            //TODO: put the id in .env
             console.log("we are here in bg")
             try{
                 //check key existence
