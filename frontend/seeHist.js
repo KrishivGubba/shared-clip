@@ -1,3 +1,11 @@
+async function modClipBoard(index){
+    const targetDiv = document.querySelector(`.content-div-${index}`)
+    const textContent = targetDiv.textContent;
+    navigator.clipboard.writeText(textContent).then(() => {
+        console.log("Copied from history to clipboard")
+    })
+}
+
 function injectIntoDiv(data) {
     const insertInto = document.getElementById("thing");
 
@@ -11,12 +19,13 @@ function injectIntoDiv(data) {
         toInsert.className = "clipboard-item";
 
         let contentDiv = document.createElement("div");
-        contentDiv.className = "content";
+        contentDiv.className =`content-div-${i}`;
         contentDiv.textContent = data[i]["data"] || "No content available"; // Default fallback
 
         let button = document.createElement("button");
-        button.className = "button";
-        button.textContent = "Action"; // Add text to button
+        button.className = `copy-button-${i}`;
+        button.textContent = "Copy (locally)"; // Add text to button
+        button.onclick = () => modClipBoard(i);
 
         toInsert.appendChild(contentDiv);
         toInsert.appendChild(button);
@@ -49,3 +58,4 @@ function getHistory(){
 }
 console.log("sending message")
 getHistory()
+

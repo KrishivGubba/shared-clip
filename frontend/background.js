@@ -1,7 +1,7 @@
 // import MouseTrap from 'mousetrap';
 
 //establish websocket connection and listen for data
-const socket = new WebSocket('ws://192.168.142.1:8765');
+const socket = new WebSocket('ws://192.168.55.1:8765');
 //upon conn
 socket.onopen = function(event) {
     
@@ -126,7 +126,7 @@ async function getAllClips(){
         const params = new URLSearchParams({
             key : thing
         });
-        const url = "http://192.168.142.1:1111/fetchclip"
+        const url = "http://192.168.55.1:1111/fetchclip"
         const urlWithParams = `${url}?${params.toString()}`;
         
         const requestOptions = {
@@ -161,7 +161,7 @@ chrome.runtime.onMessage.addListener(
                 sendResponse({success:"copied data successfully",data:copyText});
                 sendToSocket(copyText, "text") //for now the type is just text
                 //api call to svae
-                saveClip(copyText, 'http://192.168.142.1:1111/saveclip', "text"); //just text for now
+                saveClip(copyText, 'http://192.168.55.1:1111/saveclip', "text"); //just text for now
             } catch{
                 sendResponse({error:"was not able to access clipboard data"});
             }

@@ -23,7 +23,7 @@ async def unregister(websocket, id):
 async def echo(websocket):
     async for message in websocket:
         payload = json.loads(message)
-        if "oldKey" in payload:
+        if "oldKey" in payload or "checkValid" in payload:
             try:
                 print(payload)
                 print(users[payload["oldKey"]])

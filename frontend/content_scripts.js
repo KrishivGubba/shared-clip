@@ -39,33 +39,50 @@ chrome.runtime.onMessage.addListener(
     }
 );
 
-//add event listener
+//activeElement updation
 
-// MouseTrap.bind("ctrl+q", function(e) {
-//     e.preventDefault();
-//     console.log("hello there q")
-    // tell bg to give latest
+function updateActive() {
+    const elem = document.activeElement;
+    console.log(elem.tagName)
+    // if (activeElement && activeElement!==undefined && activeElement.)
+}
 
-// })
 
 // content_scripts.js
-document.addEventListener("keydown", function(event) {
-    if (event.ctrlKey && event.key.toLowerCase() === "q") {
-        console.log("heeee")
-        chrome.runtime.sendMessage(
-            {purpose: "req-key"},
-                (response) => {
-                    if (response.clips) {
-                        const toBeCopied = response.clips.data[response.clips.data.length-1].data
-                        navigator.clipboard.writeText(toBeCopied);
-                        console.log(toBeCopied)
-                    } else {
-                        console.log("received no clips");
-                    }
-                }
-        )
-    }
-});
+// document.addEventListener("paste", async function(event) {
+        //TODO: might have to replace this with the old ctrl + q functionality
+
+        // event.preventDefault();
+        // const prevPaste = await navigator.clipboard.readText();
+        // console.log(prevPaste)
+        // console.log("heeee")
+        // try{
+        //     chrome.runtime.sendMessage(
+        //         {purpose: "req-key"},
+        //             (response) => {
+        //                 if (response.clips) {
+        //                     const toBeCopied = response.clips.data[response.clips.data.length-1].data
+        //                     navigator.clipboard.writeText(toBeCopied)
+        //                         .then(() => console.log("Written to pastebin ", toBeCopied))
+        //                         .catch( error => {
+        //                             console.error("Some error has ocurred", error);
+        //                             throw new Error("Failed clipboard write");
+        //                         })
+        //                     console.log(toBeCopied)
+        //                 } else {
+        //                     console.log("received no clips");
+        //                 }
+        //             }
+        //     )
+        // }catch (error){
+        //     console.error("Error ocurred, ", error)
+        //     navigator.clipboard.writeText(prevPaste);
+        // }
+        // while(true){
+        //     // updateActive()
+        // }
+    
+// });
 
 
 console.log("bello")
