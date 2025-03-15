@@ -9,47 +9,54 @@ users = defaultdict(set)
 async def register(websocket, id):
     try:
         users[id].add(websocket)
-        await websocket.send("Successful registration")
         return True
     except Exception as e:
         print(f"Error occurred during registration: {str(e)}")
-        await websocket.send("Retry registration")
         return False
 
 async def unregister(websocket, id):
     users[id].remove(websocket)
     if not users[id]: del users[id]
 
+#TODO: maybe, if something fails here because of client error, dont use websocket to convey this, use some endpoint that will
+#comm this, websocket comms are becoming very complicated
+
 async def echo(websocket):
     async for message in websocket:
         payload = json.loads(message)
-        if "oldKey" in payload or "checkValid" in payload:
+        print(payload)
+        if "oldKey" in payload or "checkValid" in payload: #TODO: what is checkValid?
             try:
                 print(payload)
                 print(users[payload["oldKey"]])
-                users[payload["oldKey"]].remove(websocket)
-                await websocket.send("Client removed")
+                if  websocket in users[payload["oldKey"]]: users[payload["oldKey"]].remove(websocket)
             except Exception as e:
                 print("Some error ocurred")
                 print(e)
-                await websocket.send(f"Err in client removals")
         elif "id" not in payload or "data" not in payload or "data_type"  not in payload:
-            await websocket.send("Faulty message, missing keys")
+            # await websocket.send("Faulty message, missing keys")
+            print("Error")
+        elif payload["data_type"]=="heartbeat":
+            print("received heartbeat ping")
+            print(f"these are your clients for key: {payload["id"]}: {users[payload["id"]]}")
+            if websocket not in users[payload["id"]]:
+                print("yeah not in it")
+                res = await register(websocket, payload["id"])
+                print(res)
         else:
             if websocket not in users[payload["id"]]:
                 res = await register(websocket, payload["id"])
                 if not res: continue #reg failed
             mark = []
+            print("why are we not sending to everyone")
+            print(users[payload["id"]])
             for user in users[payload["id"]]:
                 if user!=websocket:
                     try:
-                        print("sent some data")
                         await user.send(payload["data"])
+                        print("sent some data")
                     except Exception as e:
-                        # await unregister(user, payload["id"])
-                        # users[payload["id"]].remove(user)
                         mark.append(user)
-                        await websocket.send("We have unregistered the client.")
             #cleanup
             for thing in mark:
                 users[payload["id"]].remove(thing)

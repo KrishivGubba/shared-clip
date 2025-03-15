@@ -1,62 +1,100 @@
-// import MouseTrap from 'mousetrap';
+let socket = null
+let isConnect = false;
+let reconnectInterval = null;
+// chrome.storage.local.get(["networkKey"], function(result) {
+//     if (result.networkKey) {
+//       wsKey = result.networkKey;
+//       //we have key, now connect
+//       connectWebSocket();
+//     } else {
+//       console.log("No network key found in storage");
+//       // TODO: in case the user does not have a key, then what do you do?
+//     }
+// //   });
 
-//establish websocket connection and listen for data
-const socket = new WebSocket('ws://192.168.55.1:8765');
-//upon conn
-socket.onopen = function(event) {
-    
-    //make this some kind of test message
-    const message = {
-        "id":123,
-        "data":"hell1",
-        "data_type":"text"
+let IP = "192.168.141.1"
+
+// console.log("background is running")
+function connectWebSocket() {
+    // In case the socket is already connected or connecting
+    if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
+        console.log("WebSocket already connected or connecting");
+        return;
     }
-    socket.send(JSON.stringify(message));
-    console.log("estd conn to wbsckt");
+    
+    console.log("Now connecting to the websocket server");
+    // Use the global socket variable, don't redeclare with const
+    socket = new WebSocket(`ws://${IP}:8765`);
+
+    socket.onopen = function() {
+        console.log("WebSocket connection established");
+        isConnect = true; // Changed from isConnect to isConnected
+        
+        // Stop any reconnection attempts since we're connected now
+        if (reconnectInterval) {
+          clearInterval(reconnectInterval);
+          reconnectInterval = null;
+        }
+    };
+      
+    socket.onclose = function(event) {
+        console.log("WebSocket connection closed", event.code, event.reason);
+        isConnect = false; // Changed from isConnect to isConnected
+        
+        // Start trying to reconnect
+        if (!reconnectInterval) {
+            reconnectInterval = setInterval(connectWebSocket, 5000); // Every 5 seconds
+        }
+    };
+    
+    socket.onerror = function(error) {
+        console.error("WebSocket error:", error);
+    };
+
+    socket.onmessage = function(event) {
+        console.log("Received a message from the backend:", event.data);
+        // sendDataToContentScript(event.data);
+        setTimeout(sendDataToContentScript, 3000, event.data)
+    };
 }
 
-socket.onmessage = function(event){
-    console.log("we received a message fromt the bakcend")
-    console.log(event.data);
-    //func to send wbsckt rcv data to cscript
-    function sendData(text){
-        try {
-            console.log("Sending data to content script:", text);
-            // chrome.runtime.sendMessage({
-            //     purpose: "incoming clip data",
-            //     data: text
-            // }, (response) => {
-            //     console.log("Response from content script:", response);
-            // });
-
-            setTimeout(() => {
-                chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-                    if (tabs.length > 0) {
-                        chrome.tabs.sendMessage(tabs[0].id, { purpose: 'incoming clip data', data: text }, (response) => {
-                            if (response && response.success) {
-                                console.log(response.message); // Success feedback
-                            } else {
-                                console.log(response);
-                                console.error(response ? response.message : 'No response from content script.');
-                            }
-                        });
+// Move this function outside of connectWebSocket
+function sendDataToContentScript(text) {
+    try {
+        console.log("Sending data to content script:", text);
+        
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            if (tabs.length > 0) {
+                chrome.tabs.sendMessage(tabs[0].id, { purpose: 'incoming clip data', data: text }, (response) => {
+                    if (response && response.success) {
+                        console.log(response.message); // Success feedback
+                    } else {
+                        console.log(response);
+                        console.error(response ? response.message : 'No response from content script.');
                     }
                 });
-                // Your code here
-            }, 5000);
-        } catch (error) {
-            console.error("Error sending data to content script:", error);
-        }
+            } else {
+                console.log("No active tabs found to send message to");
+            }
+        });
+    } catch (error) {
+        console.error("Error sending data to content script:", error);
     }
-    sendData(event.data);
 }
 
-socket.onclose = function (event) {
-    // Log a message when disconn
-    console.log('Disconnected from WebSocket server');
-};
+console.log("still working")
 
+//i think you might have to move the socket.onmessage somewhere else, it's causing issues.
+// 
+
+console.log("helloo there")
 function sendToSocket(text, type){
+    if (!isConnect){
+        console.log("Still not connected")
+        connectWebSocket(); //try to connect 
+        setTimeout(() => sendToSocket(text,type), 1000)
+
+    }
     chrome.storage.local.get(["networkKey"], function(result) {
         console.log("this is the result")
         console.log(result)
@@ -76,7 +114,24 @@ function sendToSocket(text, type){
     });
 }
 
+function keepAlive() {
+    // Check connection state and reconnect if needed
+    sendToSocket("blah", "heartbeat") //DONOT remove this line
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      connectWebSocket();
+    }
+  }
 
+connectWebSocket()
+
+chrome.alarms.create("myAlarm", {
+    periodInMinutes:1/10
+})
+
+chrome.alarms.onAlarm.addListener(function(alarm) {
+    keepAlive()
+    console.log("connecting i suppose")
+})
 
 function getNetworkKey() {
     return new Promise((resolve, reject) => {
@@ -126,7 +181,7 @@ async function getAllClips(){
         const params = new URLSearchParams({
             key : thing
         });
-        const url = "http://192.168.55.1:1111/fetchclip"
+        const url = `http://${IP}:1111/fetchclip`
         const urlWithParams = `${url}?${params.toString()}`;
         
         const requestOptions = {
@@ -161,20 +216,11 @@ chrome.runtime.onMessage.addListener(
                 sendResponse({success:"copied data successfully",data:copyText});
                 sendToSocket(copyText, "text") //for now the type is just text
                 //api call to svae
-                saveClip(copyText, 'http://192.168.55.1:1111/saveclip', "text"); //just text for now
+                saveClip(copyText, `http://${IP}:1111/saveclip`, "text"); //just text for now
             } catch{
                 sendResponse({error:"was not able to access clipboard data"});
             }
         } else if (request.purpose==="new-key" || request.purpose=="join-net"){
-            //TODO: check validity in case of join-net: 
-            // if (request.purpose==="join-net"){
-            //     body = {
-            //         "checkValid":request.key
-            //     }
-            //     socket.send(JSON.stringify(body))
-            //     //if not pass do not execute the rest this code block
-            // }
-            //TODO: put the id in .env
             console.log("we are here in bg")
             try{
                 //check key existence
