@@ -22,7 +22,8 @@
         "scripting",
         "storage",
         "cookies",
-        "tabs"
+        "tabs",
+        "alarms"
     ],
     "background":{
         "service_worker":"background.js"

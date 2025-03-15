@@ -24,27 +24,37 @@ async def unregister(websocket, id):
 async def echo(websocket):
     async for message in websocket:
         payload = json.loads(message)
+        print(payload)
         if "oldKey" in payload or "checkValid" in payload: #TODO: what is checkValid?
             try:
                 print(payload)
                 print(users[payload["oldKey"]])
-                users[payload["oldKey"]].remove(websocket)
+                if  websocket in users[payload["oldKey"]]: users[payload["oldKey"]].remove(websocket)
             except Exception as e:
                 print("Some error ocurred")
                 print(e)
         elif "id" not in payload or "data" not in payload or "data_type"  not in payload:
             # await websocket.send("Faulty message, missing keys")
             print("Error")
+        elif payload["data_type"]=="heartbeat":
+            print("received heartbeat ping")
+            print(f"these are your clients for key: {payload["id"]}: {users[payload["id"]]}")
+            if websocket not in users[payload["id"]]:
+                print("yeah not in it")
+                res = await register(websocket, payload["id"])
+                print(res)
         else:
             if websocket not in users[payload["id"]]:
                 res = await register(websocket, payload["id"])
                 if not res: continue #reg failed
             mark = []
+            print("why are we not sending to everyone")
+            print(users[payload["id"]])
             for user in users[payload["id"]]:
                 if user!=websocket:
                     try:
-                        print("sent some data")
                         await user.send(payload["data"])
+                        print("sent some data")
                     except Exception as e:
                         mark.append(user)
             #cleanup
