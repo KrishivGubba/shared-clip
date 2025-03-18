@@ -4,13 +4,33 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp">
-    <!--orientation is placing elems vertcially duh-->
-<!--    the padding stuff is the space around all edges inside layout-->
+    <!-- orientation is placing elems vertically -->
+    <!-- the padding stuff is the space around all edges inside layout -->
 
     <TextView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
         android:id="@+id/prompt"
-    />
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Click the Button to Create a Network"
+        android:textSize="18sp"
+        android:layout_marginBottom="8dp" />
+<!--    wrap content means that it takes only as much space as necessary-->
+<!--    sp is some scale for the text-->
+<!--    dp is the scale for margins-->
+<!--    layout margin bottom literally puts x number of pixels below of empty space-->
+
+    <EditText
+        android:id="@+id/enterText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Type here..."
+        android:enabled="false" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Generate Key and Join Network"
+        android:id="@+id/button"
+        android:onClick="clickMe"/>
 
 </LinearLayout>
